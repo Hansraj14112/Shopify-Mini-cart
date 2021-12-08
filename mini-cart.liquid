@@ -1,0 +1,555 @@
+
+<div class="cart_data fetch_data hide" >
+  <div class="drawer__header">
+    <div class="drawer__title">Your Cart</div>
+    <span  class="cart_close icon-close">X</span>
+  </div>
+  {% if cart.item_count == 0 %}
+  <div class="sixteen_columns">
+    <div class="section clearfix">
+      <p class="quote">Your cart is currently empty.
+      </p>
+      <br class="clear" />
+      <br class="clear" />
+    </div>
+  </div>
+  {% else %}
+  <div class="sixteen columns" id="cart-items">
+    <form action="/cart" method="post" id="cart_form">
+      <div class="cart_part_one">
+        <ul class="none">
+          {% for item in cart.items %}
+          <li id="{{ item.id }}">
+            <div class="eight columns title_column alpha">
+              <div class="detailsimages">
+                <span>
+                  <a href="{{ item.url }}" title="{{ item.title | escape }}" class="cart_image">
+                    <img  src="{{ item | img_url: '300x' }}"
+                         alt="{{ item.title | escape }}"
+                         class="lazyload lazyload--fade-in"
+                         sizes="100px"
+                         srcset="{{ item | img_url: '2048x' }} 2048w,
+                                 {{ item | img_url: '1600x' }} 1600w,
+                                 {{ item | img_url: '1200x' }} 1200w,
+                                 {{ item | img_url: '1000x' }} 1000w,
+                                 {{ item | img_url: '800x' }} 800w,
+                                 {{ item | img_url: '600x' }} 600w,
+                                 {{ item | img_url: '400x' }} 400w,
+                                 {{ item | img_url: '200x' }} 200w,
+                                 {{ item | img_url: '100x' }} 100w"
+                         />
+                  </a>
+                </span>
+              </div>
+              <div class="details">
+                <h2 class="CartItem__Title Heading"><a href="{{ item.url }}" title="{{ item.title | escape }}">{{ item.title }}</a></h2>
+                <p class="cart_price"><span class="money">{{ item.price | money }}</span></p>
+
+                <span>
+                  {% unless item.product.has_only_default_variant or item.variant.title contains "Title" %}
+                  <p class="meta">
+                    {% for option in item.product.options %}
+                    <span class="label">{{ option }}:</span> <span>{{ item.variant.options[forloop.index0] }}</span><br />
+                    {% endfor %}
+                  </p>
+                  {% endunless %}
+
+                  {% if item.properties %}
+                  <p>
+                    {% for p in item.properties %}
+                    {% unless p.last == blank %}
+                    {% if p.last contains '/uploads/' %}
+                    {{ p.first }}: <a class="lightbox" href="{{ p.last }}">{{ 'cart.general.uploaded_file' | t }}</a><br />
+                    {% else %}
+                    {% if p.first == "Price" %}
+                    {{ p.first }}: {{ p.last }}<br />
+                    {% else %}
+                    {% endif %}
+                    {% endif %}
+                    {% endunless %}
+                    {% endfor %}
+                  </p>
+                  {% endif %}
+                </span>
+                <div class="update_cart">
+                  <a  class="minus_udpate_clas" variant_id="{{ item.id }}" data-updateid="{{ item.id }}">-</a>
+                  <input type="number" min="0"  data-varaint="{{ item.id }}" class="quantity" name="updates[]" id="updates_{{ item.id }}" value="{{ item.quantity }}" {% if settings.limit_quantity and item.variant.inventory_management != blank and item.variant.inventory_quantity > 0 and item.variant.inventory_policy == "deny" %}max="{{ item.variant.inventory_quantity }}"{% endif %} />
+                  <a class="plus_udpate_clas"  variant_id="{{ item.id }}" data-updateid="{{ item.id }}">+</a>
+                  <span class="udpate_clas" data-id="{{item.variant_id}}">Update</span> 
+                </div> 
+              </div>
+              <div class="four columns mobile_right omega">
+                <a data-id="{{item.variant_id}}" href="#" title="remove" class="right remove"><span class="icon-close">X</span></a>
+
+                <!--           <span class="price_total">
+<span class="money" data-id="{{ item.id }}">{{ item.line_price | money }}</span>
+</span> -->
+              </div>
+
+            </div>
+
+
+
+
+
+          </li> 
+          <div class="sixteen columns clearfix alpha omega">
+            <hr />
+          </div>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="cart_part_two">
+        <div class="update_cart four columns omega">
+          <h4 class="updatess">
+            <span class="money">Total : {{ cart.total_price | money_with_currency }}</span>
+          </h4>
+          {% comment %}
+          <small id="estimated-shipping" style="display:none">+ <em><span class="money">{{ 0 | money }}</span></em> {{ 'cart.shipping_calculator.estimated_shipping' | t }}</small>
+          {% endcomment %}
+
+
+          {% comment %}<!--           <small class="excluding_tax"><em>{{ 'cart.general.excluding_tax_shipping' | t }}</em></small> -->
+          {% endcomment %}
+
+          {% if settings.show_multiple_currencies %}
+          <small>
+            <em>{{ 'cart.general.orders_processed_in_currency_html' | t: currency: shop.currency }}</em>
+          </small>
+          {% endif %}
+
+          {% if section.settings.display_tos_checkbox %}
+          <div>
+            <input type="checkbox" class="tos_agree" id="cart_agree" required />
+            <label class="tos_label" for="cart_agree">
+              {{ 'cart.general.agree_to_terms_html' | t }}
+            </label>
+          </div>
+          {% endif %}
+
+        </div>
+
+        {% if section.settings.display_special_instructions %}
+        <div class="three columns mobile_left alpha">
+          <label for="note">{{ 'cart.general.note' | t: shop_name: shop.name }}:</label>
+        </div>
+
+        <div class="six columns">
+          <textarea id="note" name="note" rows="2">{{ cart.note }}</textarea>
+        </div>
+        {% endif %}
+
+      </div>
+    </form>
+    <div class="checkouts_form"><a href="/checkout" class="checkouts">checkout</a></div>
+  </div>
+  {%endif%}
+</div>
+
+<style>
+  .cart_data.fetch_data {
+    /*     display: block; */
+    max-width: 400px;
+    text-align: center;
+    right: 0;
+    position: fixed;
+    top: 38px;
+    z-index: 100;
+    background-color: #000000;
+    color: #fff;
+    padding: 15px;
+    left: auto;
+    width: 100%;
+    height: 600px;
+    overflow-y: scroll;
+  }
+  .drawer__header {
+    display: flex;
+    left: 0;
+    right: 0;
+    position: relative;
+    margin-bottom: 0;
+    justify-content: space-between;
+  }
+  span.cart_close.icon-close {
+    margin-left:20px;
+  }
+  .cart_part_one ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .detailsimages {
+    max-width: 100%;
+    width: 80px;
+    display: block;
+    height: 80px;
+    position: relative;
+    text-align: center;
+    padding: 0px;
+  }
+  .detailsimages img {
+    max-width: 100%;
+    height: 100%;
+  }
+  .details p {    
+    font-size: 16px;
+    color: #fff !important;
+  }
+  .details a {
+    font-size: 16px;
+    color: #fff !important;
+    text-decoration: none;
+  }
+  .cart_part_one ul li > div{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cart_part_one ul li .right.remove {
+    position: relative;
+    top: inherit;
+    right: inherit;
+    color: #fff !important;
+  }
+  .details {
+    display: block;
+    text-align:left;
+  }
+  .update_cart {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #fff;
+    border-radius: 3px;
+  }
+  .update_cart .quantity {
+    border: 0 !important;
+    background-color: transparent;
+    color: #fff;
+    text-align: center;
+    max-width: 80px;
+  }
+  .update_cart .plus_udpate_clas, .update_cart .minus_udpate_clas {
+    width: 25px;
+    height: 25px;
+    border: 0px solid;
+    text-align: center;
+    cursor: pointer;
+  }
+  .update_cart span.udpate_clas {
+    display: none;
+  }
+  .cart_part_one hr {
+    margin: 3rem 0 1rem;
+    border: 0px solid #ccc;
+    height: 1px;
+    background-color: rgba(255,255,255,.2);
+  }
+  .cart_data .cart_part_two {
+    color: #fff;
+    display: block;
+    width: 100%;
+    bottom: 0;
+    background: transparent;
+    padding: 0px;
+
+  }
+  .update_cart.four.columns.omega .updatess {
+    text-align: center;
+    color: #fff !important;
+  }
+  .checkouts_form .checkouts {
+    background: transparent !important;
+    border: 1px solid #fff;
+    border-radius: 3px;
+  }
+  .checkouts_form {
+    padding: 20px;
+  }
+  .media model-viewer, .product .media>:not(.zoom):not(.deferred-media__poster-button) {
+    display: block;
+    max-width: 500px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: auto;
+    width: 100%;
+    right: 0;
+    margin: 0 auto;
+  }
+
+
+
+
+
+
+
+
+  .mini_cart .none li {
+    padding: 10px 0;
+  }
+
+  .header-actions-list:focus {
+    outline: none;
+  }
+  /* mini cart */
+  p.quote {
+    text-align: center;
+  }
+  .plus_udpate_clas, .minus_udpate_clas {
+    width: 25px;
+    height: 25px;
+    border: 1px solid;
+    text-align: center;
+    cursor: pointer;
+  }
+  .overlays {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    background: #4d4e56;
+    top: 0;
+    opacity: 0.5;
+    z-index: 99;
+  }
+
+  .update_cart.four.columns.omega .updatess {
+    text-align: center;
+    font-size: 16px;
+    width: 100%;
+  }
+  .extras{
+    display:none;
+    transition:all 1s;
+  }
+  .mini_cart input#checkout {
+    background-color: #a56600;
+    color: #fff;
+    padding: 18px 0;
+  }
+  .mini_cart .twelve_align_right {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+  }
+  .mini_cart .cart_data:nth-child(2) {
+    display: none;
+  } 
+  .mini_cart .details p {
+    margin-bottom: 0px;
+    font-size: 12px;
+  }
+  .mini_cart #cart-items {
+    width: 100%;
+    height: 500px;
+    overflow-y: scroll;
+    max-width: 100%;
+    display: block;
+    margin: 0;
+    padding: 0 20px;
+  }
+  .mini_cart .udpate_clas {
+    display: none;
+  }
+  .mini_cart .cart_count::before {content: "(";}
+
+  .mini_cart .cart_count::after {content: ')';}
+  .mini_cart .update_cart.four.columns.omega {
+    width: 100%;
+    float: left;
+    margin: 0;
+    padding: 0 30px;
+  }
+
+
+  .update_cart.four.columns.omega .updatess {
+    text-align: center;
+  }
+  .mini_cart {
+    height:100%;
+    width: 400px;
+    background: #dce5e3;
+    border: 1px solid;
+    float: left;
+    position: fixed;
+    top: 0px;
+    right: -500px;
+    z-index:9999;
+  }
+  .mini_cart .update_cart {
+    display: block;
+    float: left;
+    width: 50%;
+  }
+  .mini_cart .none li {
+    display: block !important;
+    float: left;
+    width: 100%;
+    position: relative;
+  }
+
+  .mini_cart .none li .title_column {
+    width: 80%;
+  }
+  .right.remove {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .cart_part_one {
+    position: relative;
+  }
+  .cart_part_two {
+    color: #fff;
+    display: block;
+    width: 100%;
+    float: left;
+    bottom: 0;
+    background: #4d4e56;
+    padding: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .mini_cart .update_cart.four.columns.omega {
+    padding-left: 0px;
+  }
+  span.price_total {
+    display: block;
+    text-align: right;
+    width: 100%;
+  }
+  .mini_cart .none li .mobile_right.omega {
+    float: left;
+    width: 100%;
+    display: block;
+    margin-left: 0px;
+  }
+
+  .checkouts_form {
+    display: block;
+    width: 100%;
+    float: left;
+  }
+
+  .checkouts_form .checkouts {
+    background: #4d4e56;
+    padding: 10px;
+    display: inline-block;
+    font-size: 19px;
+    width: 100%;
+    margin-top: 10px;
+    text-align: center;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .mini_cart .four.checkout-area.columns.ml0.mr0 {
+    display: block;
+    width: 100%;
+  }
+
+  .mini_cart .update_subtotal_text {width: 100%;float: left;margin-left: 0;}
+
+  .mini_cart .update_subtotal_text .update_subtotal {
+    display: none;
+  }
+
+  .mini_cart .download_pdf {
+    width: 100%;
+    display: block;
+  }
+
+  .mini_cart .download_pdf a {
+    display: block !important;
+    width: 100%;
+  }
+  .mini_cart .update_cart > span {
+    padding: 3px;
+    border: 1px solid;
+    cursor: pointer;
+  }
+
+  .mini_cart .update_cart > input {
+    text-align: center;
+    width: 25px;
+    height: 25px;
+    background: #dce5e3;
+    border: 1px solid;
+    border-radius: unset;
+  }
+  .mini_cart .close_bar {
+    float: right;
+    font-size: 20px;
+    margin-right: 50px;
+    margin-top: 10px;
+  }
+  .mini_cart .cart_close  {
+    float: right;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  .noneed {
+    display: none;
+  }
+
+  /* ---------------------------------- */
+
+  .mini_cart .quote {
+    font-size: 20px;
+    text-transform: uppercase;
+    font-style: unset;
+  }
+  .mini_cart .drawer__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 20px 20px 20px;
+    background: #4d4e56;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .mini_cart .drawer__title {
+    font-size: 20px;
+  }
+
+
+  .mini_cart .detailsimages {
+    width: 25%;
+    float: left;
+  }
+
+  .mini_cart .details {
+    width: 75%;
+    float: left;
+    padding-left: 5px;
+  }
+
+  .mini_cart .none li {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+
+  .mini_cart .update_cart input {
+    margin: 0;
+  }
+  .mini_cart .update_cart > span {
+    width: 25px;
+    border: 1px solid;
+    cursor: pointer;
+    height: 25px;
+    text-align: center;
+  }
+  .mini_cart p {
+    padding: 0;
+  }
+  .mini_cart .update_cart {
+    display: flex;
+  }
+  .variant_id,.variant_title{
+    opacity:0;
+  }
+  .hide{
+    display:none;
+  }
+</style>
